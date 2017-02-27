@@ -5,7 +5,7 @@
 # This code is available under the MIT License.
 # (c)2010-2011 Nakatani Shuyo / Cybozu Labs Inc.
 #Modified By Durgesh Kumar 
-#  Last Modified Date : 21st novemember 2016
+#  Last Modified Date : 21st Feb 2017, 21st novemember 2016
 #  Used for LDA using Gibbs Sampling
 
 
@@ -24,17 +24,18 @@ except:
 class LDA:
     def __init__(self, K, alpha, eta, docs,doc_ids, V, smartinit=True):
         self.K = K
-        self.alpha = alpha # parameter of topics prior
-        self.eta = eta   # parameter of words prior
+        self.alpha =  numpy.full(K, alpha, dtype=float) # parameter of topics prior
+        self.eta =numpy.full(V, eta, dtype=float)  # parameter of words prior
         self.docs = docs
         self.doc_ids = doc_ids
         self.V = V
 
         self.z_m_n = [] # topics of words of documents
-        self.n_m_z = numpy.zeros((len(self.docs), K)) + alpha     # word count of each document and topic
-        self.n_z_t = numpy.zeros((K, V)) + eta # word count of each topic and vocabulary
-        self.n_z = numpy.zeros(K) + V * eta    # word count of each topic
+        self.n_m_z = numpy.zeros((len(self.docs), K)) + self.alpha     # Modify here to consider for vector :: # word count of each document and topic
+        self.n_z_t = numpy.zeros((K, V)) + self.eta   # Modify here to consider for Vector :: # word count of each topic and vocabulary
+        self.n_z = numpy.zeros(K) + sum(self.eta)  ## Modify here to consider for Vector :: #   word count of each topic
 
+        print 'self.n_z : ' , self.n_z
         self.N = 0
         for m, doc in enumerate(docs):
             self.N += len(doc)
@@ -150,7 +151,7 @@ def output_word_topic_dist(lda, voca):
     fout = '%s/topic_word_dist.txt' %(out_dir) 
     f=open(fout,'w')
     for k in range(lda.K):
-        f.write("\n\n-- topic: %d (%d words)" % (k, zcount[k]))
+        f.write("\n\n-- topic: %d (%d words)\n" % (k, zcount[k]))
         #print ("\n-- topic: %d (%d words)" % (k, zcount[k]))
         for w in numpy.argsort(-phi[k])[:30]:
             #print ("%s: %f (%d)" % (voca[w], phi[k,w], wordcount[k].get(w,0)))
@@ -165,8 +166,8 @@ def main():
     parser = optparse.OptionParser()
     parser.add_option("-f", dest="filename", help="corpus filename")
     parser.add_option("-c", dest="corpus", help="using range of Brown corpus' files(start:end)")
-    parser.add_option("--alpha", dest="alpha", type="float", help="parameter alpha", default=0.5)
-    parser.add_option("--eta", dest="eta", type="float", help="parameter eta", default=0.5)
+    parser.add_option("--alpha", dest="alpha", type="float", help="parameter alpha", default=0.1)
+    parser.add_option("--eta", dest="eta", type="float", help="parameter eta", default=0.2)
     parser.add_option("-k", dest="K", type="int", help="number of topics", default=20)
     parser.add_option("-i", dest="iteration", type="int", help="iteration count", default=100)
     parser.add_option("-s", dest="smartinit", action="store_true", help="smart initialize of parameters", default=False)
@@ -202,7 +203,7 @@ def main():
     f=open(flog,'w')
     f.write("corpus=%d, no of event = %d , words=%d, K=%d, a=%f, b=%f , iteration = %d \n" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta,options.iteration))
     f.close()
-    print ("corpus=%d, no of event =%d , words=%d, K=%d, a=%f, b=%f" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta))
+    print ("corpus=%d, no of event =%d , uniq words=%d, K=%d, a=%f, b=%f" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta))
 
     #import cProfile
     #cProfile.runctx('lda_learning(lda, options.iteration, voca)', globals(), locals(), 'lda.profile')

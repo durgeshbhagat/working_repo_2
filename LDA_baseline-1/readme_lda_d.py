@@ -26,6 +26,12 @@ vocabulary.py
 lda_d.py
     class LDA
             def __init__(self, K, alpha, eta, docs,doc_ids, V, smartinit=True)
+                
+                self.z_m_n = [] # topics of words of documents
+                self.n_m_z = numpy.zeros((len(self.docs), K)) + alpha     # word count of each document and topic
+                self.n_z_t = numpy.zeros((K, V)) + eta   # word count of each topic and vocabulary
+                self.n_z = numpy.zeros(K) + V * eta      # word count of each topic
+
             def inference(self)  """learning once iteration"""
             def worddist(self)    """get topic-word distribution"""
             def doc_topic_dist(self) 
