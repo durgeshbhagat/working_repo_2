@@ -5,6 +5,7 @@
 # This code is available under the MIT License.
 # (c)2010-2011 Nakatani Shuyo / Cybozu Labs Inc.
 #Modified By Durgesh Kumar 
+#Last Mofified date : 6th March 2017
 
 import numpy
 import time
@@ -31,9 +32,9 @@ class LDA:
        
     def __init__(self, K, alpha, eta1,eta2, docs,doc_ids, V1,V2, smartinit=True):
         self.K = K
-        self.alpha = alpha   # parameter of topics prior
-        self.eta1 = eta1     # parameter of words prior for Named Entity (N.E)
-        self.eta2 = eta2     # paramter of words prior for Non-Name Entity ( N.N.E)
+        self.alpha =  numpy.full(K, alpha, dtype=float) # parameter of topics prior
+        self.eta1 =numpy.full(V1, eta1, dtype=float)  # parameter of words prior  for Named Entity (N.E)
+        self.eta2 =numpy.full(V2, eta2, dtype=float)  # paramter of words prior for Non-Name Entity ( N.N.E)
         self.docs = docs # list of list , Actual Corpus
         self.doc_ids = doc_ids
         self.V1 = V1   # of Named Entity
@@ -45,10 +46,10 @@ class LDA:
         
         # variables for n.e
         self.n_z_t1  = numpy.zeros((K, V1)) + eta1 # word count of each topic and vocabulary
-        self.n_z1 = numpy.zeros(K) + V1 * eta1     # word count of each topic
+        self.n_z1 = numpy.zeros(K) + V1 * sum(self.eta1)     # word count of each topic
         # Variables for n.n.e
         self.n_z_t2  = numpy.zeros((K, V2)) + eta2 # word count of each topic and vocabulary
-        self.n_z2 = numpy.zeros(K) + V2 * eta2    # word count of each topic
+        self.n_z2 = numpy.zeros(K) + V2 *  sum(self.eta2)     # word count of each topic
         
         self.N = 0
         for m, doc in enumerate(docs):
@@ -363,13 +364,15 @@ def main():
     parser.add_option("--seed", dest="seed", type="int", help="random seed")
     parser.add_option("--df", dest="df", type="int", help="threshold of document freaquency to cut words", default=0)
     (options, args) = parser.parse_args()
-    if not (options.filename or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
+    #if not (options.filename or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
 
     if options.filename:
          corpus,doc_ids, event_list  = vocabulary.load_file(options.filename)
     else:
-        corpus = vocabulary.load_corpus(options.corpus)
-        if not corpus: parser.error("corpus range(-c) forms 'start:end'")
+        options.filename = 'filtered_event_new2.pkl'
+        corpus,doc_ids, event_list  = vocabulary.load_file(options.filename)
+        #corpus = vocabulary.load_corpus(options.corpus)
+        #if not corpus: parser.error("corpus range(-c) forms 'start:end'")
     if options.seed != None:
         numpy.random.seed(options.seed)
     
