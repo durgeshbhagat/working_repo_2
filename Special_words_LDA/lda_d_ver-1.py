@@ -33,8 +33,11 @@ class LDA:
     def __init__(self, K, alpha, eta1,eta2, docs,doc_ids, V1,V2, smartinit=True):
         self.K = K
         self.alpha =  numpy.full(K, alpha, dtype=float) # parameter of topics prior
-        self.eta1 =numpy.full(V1, eta1, dtype=float)  # parameter of words prior  for Named Entity (N.E)
+        self.eta1 = eta1#numpy.full(V1, eta1, dtype=float)  # parameter of words prior  for Named Entity (N.E)
+      
+                
         self.eta2 =numpy.full(V2, eta2, dtype=float)  # paramter of words prior for Non-Name Entity ( N.N.E)
+        
         self.docs = docs # list of list , Actual Corpus
         self.doc_ids = doc_ids
         self.V1 = V1   # of Named Entity
@@ -346,6 +349,23 @@ def output_word_topic_dist(lda, voca):
             f.write("%s: %f (%d)\n" % (voca.__getitem__(w,'Nner').encode('ascii', 'ignore'), phi_Nner[k,w], wordcount_Nner[k].get(w,0)))    
     f.close()
 
+
+def initialize_eta1(V1, voca,eta1,fname):
+    eta1 =numpy.full(V1, eta1, dtype=float)  # parameter of words prior  for Named Entity (N.E)
+    # Read file and initialize 
+    f=open(fname,'r')
+    line_list =f.read().split('\n')
+    for i,line in enumerate(line_list):
+        word, score = line.strip().split('\t')
+        word_id = voca.vocas_id_ner[word]
+        eta1[word_id] = score
+        '''
+        a) read line by line 
+        b) word to word id 
+        c) intialize eta1 for corresponding word id 
+        '''
+    return(eta1)    
+
 def main():
     t1= time.time()
     import optparse
@@ -358,7 +378,7 @@ def main():
     parser.add_option("--eta1", dest="eta1", type="float", help="parameter eta for ner word", default=0.4)
     parser.add_option("--eta2", dest="eta2", type="float", help="parameter eta for Non-ner word", default=0.2)
     parser.add_option("-k", dest="K", type="int", help="number of topics", default=20)
-    parser.add_option("-i", dest="iteration", type="int", help="iteration count", default=100)
+    parser.add_option("-i", dest="iteration", type="int", help="iteration count", default=10)
     parser.add_option("-s", dest="smartinit", action="store_true", help="smart initialize of parameters", default=False)
     parser.add_option("--stopwords", dest="stopwords", help="exclude stop words", action="store_true", default=False)
     parser.add_option("--seed", dest="seed", type="int", help="random seed")
@@ -387,7 +407,8 @@ def main():
     
     if event_list is not None : options.K  = len(event_list)
     suffix = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta1,options.eta2, options.iteration, suffix)
+    eta1 = initialize_eta1(V1, voca,options.eta1,fname)
+    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, eta1,options.eta2, options.iteration, suffix)
     
     try:
         os.makedirs(out_dir)

@@ -16,7 +16,7 @@ def load_corpus(range):
         return [corpus.words(fileid) for fileid in corpus.fileids()[start:end]]
 '''
 #modified load_file
-def load_file(filename):
+def load_file(filename):+
     corpus = []
     doc_ids= []
     event_list=[]
@@ -107,14 +107,14 @@ def lemmatize(w0):
 
 class Vocabulary:
     def __init__(self, excluds_stopwords=False):
-        self.vocas_ner = []        # id to word
-        self.vocas_id_ner = dict() # word to id
+        self.vocas_ner = []        # id to word for NER
+        self.vocas_id_ner = dict() # word to id for NER
         
-        self.vocas_Nner = []        # id to word
-        self.vocas_id_Nner = dict() # word to id
+        self.vocas_Nner = []        # id to word for Non-NER
+        self.vocas_id_Nner = dict() # word to id for Non-NER
         
-        self.docfreq_ner = []      # id to document frequency
-        self.docfreq_Nner = []
+        self.docfreq_ner = []      # id to document frequency for NER
+        self.docfreq_Nner = []     # id  to document frequency for NON-NER
         self.excluds_stopwords = excluds_stopwords
 
     def term_to_id(self, term0, ner_tag='Nner'):
@@ -190,6 +190,7 @@ class Vocabulary:
         return [conv(doc) for doc in corpus]
 
     def __getitem__(self, v,term='ner'):
+    #returns the word corresponding to word no
         if term == 'ner':
             return self.vocas_ner[v]
         else:
