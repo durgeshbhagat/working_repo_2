@@ -351,12 +351,15 @@ def output_word_topic_dist(lda, voca):
 
 
 def initialize_eta1(V1, voca,eta1,fname):
+    ''' Intitalize the dicichlet paprameter of special word from the file '''
     eta1 =numpy.full(V1, eta1, dtype=float)  # parameter of words prior  for Named Entity (N.E)
-    # Read file and initialize 
-    f=open(fname,'r')
-    line_list =f.read().split('\n')
+    # Read file and initialize
+    fname_total = '%s/%s' %('weightage_file',fname) 
+    f=open(fname_total,'r')
+    line_list =f.read().strip().split('\n')
     for i,line in enumerate(line_list):
-        word, score = line.strip().split('\t')
+        print ' line:' , line
+        word, score = line.strip().split(', ')
         word_id = voca.vocas_id_ner[word]
         eta1[word_id] = score
         '''
@@ -364,7 +367,7 @@ def initialize_eta1(V1, voca,eta1,fname):
         b) word to word id 
         c) intialize eta1 for corresponding word id 
         '''
-    return(eta1)    
+    return eta1   
 
 def main():
     t1= time.time()
@@ -372,7 +375,8 @@ def main():
     import vocabulary 
     global out_dir 
     parser = optparse.OptionParser()
-    parser.add_option("-f", dest="filename", help="corpus filename")
+    parser.add_option("--finp", dest="filename_ip", help="input filename")
+    parser.add_option("--fsp", dest="filename_sp", help="special words filename")
     parser.add_option("-c", dest="corpus", help="using range of Brown corpus' files(start:end)")
     parser.add_option("--alpha", dest="alpha", type="float", help="parameter alpha", default=0.5)
     parser.add_option("--eta1", dest="eta1", type="float", help="parameter eta for ner word", default=0.4)
@@ -384,13 +388,13 @@ def main():
     parser.add_option("--seed", dest="seed", type="int", help="random seed")
     parser.add_option("--df", dest="df", type="int", help="threshold of document freaquency to cut words", default=0)
     (options, args) = parser.parse_args()
-    #if not (options.filename or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
+    #if not (options.filename_ip or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
 
-    if options.filename:
-         corpus,doc_ids, event_list  = vocabulary.load_file(options.filename)
+    if options.filename_ip:
+         corpus,doc_ids, event_list  = vocabulary.load_file(options.filename_ip)
     else:
-        options.filename = 'filtered_event_new2.pkl'
-        corpus,doc_ids, event_list  = vocabulary.load_file(options.filename)
+        options.filename_ip = 'filtered_event_new2.pkl'
+        corpus,doc_ids, event_list  = vocabulary.load_file(options.filename_ip)
         #corpus = vocabulary.load_corpus(options.corpus)
         #if not corpus: parser.error("corpus range(-c) forms 'start:end'")
     if options.seed != None:
@@ -407,8 +411,9 @@ def main():
     
     if event_list is not None : options.K  = len(event_list)
     suffix = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-    eta1 = initialize_eta1(V1, voca,options.eta1,fname)
-    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, eta1,options.eta2, options.iteration, suffix)
+    V1,V2 = voca.size()
+    eta1 = initialize_eta1(V1, voca,options.eta1,options.filename_sp)
+    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta1,options.eta2, options.iteration, suffix)
     
     try:
         os.makedirs(out_dir)
@@ -416,7 +421,7 @@ def main():
         print ' %s Dir exist ' %(out_dir)
         print 'E MSG : ' , e
     #lda = LDA(options.K, options.alpha, options.eta, docs, doc_ids, voca.size(), options.smartinit)
-    V1,V2 = voca.size()
+ 
     print 'V1 = %d , V2 = %d ' %(V1,V2)
     '''
     print ' Docs :: ' 
@@ -428,7 +433,7 @@ def main():
     '''
     
     
-    lda = LDA(options.K, options.alpha, options.eta1,options.eta2,docs,doc_ids, V1,V2, smartinit=True) # hv to rechechk and modify options.smartint here
+    lda = LDA(options.K, options.alpha,eta1,options.eta2,docs,doc_ids, V1,V2, smartinit=True) # hv to rechechk and modify options.smartint here
     flog = '%s/log_file.txt' %(out_dir)
     f=open(flog,'w')
     f.write("corpus=%d, V1_ner = %d , V2_Nner =%d, K=%d, alpha=%f, eta1_ner=%f , eta_2_Nner = %f,  iteration = %d \n" % (len(corpus), V1, V2, options.K, options.alpha, options.eta1, options.eta2, options.iteration))
