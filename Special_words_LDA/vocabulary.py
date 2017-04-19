@@ -7,6 +7,7 @@
 import pickle
 import nltk, re
 
+ip_dir ='ip'
 def load_corpus(range):
     m = re.match(r'(\d+):(\d+)$', range)
     if m:
@@ -51,7 +52,7 @@ def load_file(filename):
     corpus = []
     doc_ids= []
     event_list=[]
-    fname_total  = 'ip/%s' %(filename)
+    fname_total  = '%s/%s' %(ip_dir,filename)
     f = open(fname_total, 'r')
     story_dic = pickle.load(f)
     f.close()
@@ -63,8 +64,9 @@ def load_file(filename):
         for item in ['PER' , 'LOC' , 'ORG'] :
             #print item , story_dic[story]['NER'][item]
             temp += story_dic[story]['NER'][item]
-        temp_doc.append(temp)
-        temp =[]
+        temp_doc.append(temp )
+        temp =[]                       
+        
         for item in ['ONS']:
             temp+= story_dic[story]['NER'][item]
         temp_doc.append(temp)

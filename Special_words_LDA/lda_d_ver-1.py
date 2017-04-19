@@ -49,10 +49,10 @@ class LDA:
         
         # variables for n.e
         self.n_z_t1  = numpy.zeros((K, V1)) + eta1 # word count of each topic and vocabulary
-        self.n_z1 = numpy.zeros(K) + V1 * sum(self.eta1)     # word count of each topic
+        self.n_z1 = numpy.zeros(K) +  sum(self.eta1)     # word count of each topic # mistake Found! sum(self.eta1) instead of V1 * sum(self.eta1)
         # Variables for n.n.e
-        self.n_z_t2  = numpy.zeros((K, V2)) + eta2 # word count of each topic and vocabulary
-        self.n_z2 = numpy.zeros(K) + V2 *  sum(self.eta2)     # word count of each topic
+        self.n_z_t2  = numpy.zeros((K, V2)) + eta2 # word count of each topic and vocabulary 
+        self.n_z2 = numpy.zeros(K) +   sum(self.eta2)     # word count of each topic #Mistake Found,  sum(self.eta2)  instead V2 *  sum(self.eta2)   
         
         self.N = 0
         for m, doc in enumerate(docs):
@@ -112,7 +112,7 @@ class LDA:
         #print 'self.n_z1 :: INIT ' , self.n_z1 
         #print 'self.n_z2 :: INIT ' , self.n_z2
         
-        print ' \n END of INIT ::: ------------------- \n\n\n'
+        #print ' \n END of INIT ::: ------------------- \n\n\n'
         
         #check_for_negative_values(self.n_z1)
         #check_for_negative_values(self.n_z2)
@@ -121,7 +121,7 @@ class LDA:
         
     def inference(self):
         """learning once iteration"""
-        print 'Iternation no in inference :: ' , self.iter_count
+        #print 'Iternation no in inference :: ' , self.iter_count
         for m, doc in enumerate(self.docs):
             #z_m_n = self.z_m_n
             #n_m_z = self.n_m_z
@@ -205,7 +205,7 @@ class LDA:
         #print 'self.n_z1 :: ' , self.n_z1 
         #print 'self.n_z2 :: ' , self.n_z2
                     
-        print ' \n ------------- End of iteration Count %d ------- \n\n ' %(self.iter_count)
+        print ' - - End of iteration # %d --' %(self.iter_count)
     def worddist(self):
         ''' get topic-word distribution '''
         #print 'self.n_z new axis' , self.n_z,self.n_z[:, numpy.newaxis].shape, self.n_z_t.shape
@@ -282,7 +282,7 @@ def lda_learning(lda, iteration, voca):
         #print ' lda.n_z_t[:,0] ' ,lda.n_z_t1[:,0]
         f.write("-%d p=%f\n" % (i + 1, perp))
         f.close()
-        print ("-%d p=%f" % (i + 1, perp))
+        print ("-%d p=%f" % (i + 1, perp)),
         if pre_perp:
             if pre_perp < perp:
                 #output_word_topic_dist(lda, voca)
@@ -290,7 +290,7 @@ def lda_learning(lda, iteration, voca):
             else:
                 pre_perp = perp
         lda.iter_count +=1
-        print ' No of iteration Count :: ' , lda.iter_count
+        print ' Iteration # :: ' , lda.iter_count, 
     output_word_topic_dist(lda, voca)
     output_doc_topic_dist(lda,voca)
 
@@ -337,15 +337,15 @@ def output_word_topic_dist(lda, voca):
     for k in range(lda.K):
         f.write("\n\n\n-- topic: %d (%d words)" % (k, zcount[k]))
         f.write(" \n*************  NER terms \n")
-        print ("\n\n\n-- topic: %d (%d words)" % (k, zcount[k]))
-        print ( " \n*************  NER terms ")
+        #print ("\n\n\n-- topic: %d (%d words)" % (k, zcount[k]))
+        #print ( " \n*************  NER terms ")
         for w in numpy.argsort(-phi_ner[k])[:30]:
-            print ("%s: %f (%d)" % (voca[w], phi_ner[k,w], wordcount_ner[k].get(w,0)))
+            #print ("%s: %f (%d)" % (voca[w], phi_ner[k,w], wordcount_ner[k].get(w,0)))
             f.write("%s: %f (%d)\n" % (voca[w], phi_ner[k,w], wordcount_ner[k].get(w,0)))
-        print (" \n+++++++++++++ Non Ner term ")
+        #print (" \n+++++++++++++ Non Ner term ")
         f.write(" \n+++++++++++++ Non Ner term \n")
         for w in numpy.argsort(-phi_Nner[k])[:30]:
-            print ("%s: %f (%d)" % (voca.__getitem__(w,'Nner'), phi_Nner[k,w], wordcount_Nner[k].get(w,0)))
+            #print ("%s: %f (%d)" % (voca.__getitem__(w,'Nner'), phi_Nner[k,w], wordcount_Nner[k].get(w,0)))
             f.write("%s: %f (%d)\n" % (voca.__getitem__(w,'Nner').encode('ascii', 'ignore'), phi_Nner[k,w], wordcount_Nner[k].get(w,0)))    
     f.close()
 
@@ -358,8 +358,8 @@ def initialize_eta1(V1, voca,eta1,fname):
     f=open(fname_total,'r')
     line_list =f.read().strip().split('\n')
     for i,line in enumerate(line_list):
-        print ' line:' , line
-        word, score = line.strip().split(', ')
+        #print ' line:' , line
+        word, score = line.strip().split(' #,# ')
         word_id = voca.vocas_id_ner[word]
         eta1[word_id] = score
         '''
@@ -413,8 +413,8 @@ def main():
     suffix = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
     V1,V2 = voca.size()
     eta1 = initialize_eta1(V1, voca,options.eta1,options.filename_sp)
-    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta1,options.eta2, options.iteration, suffix)
-    
+    #out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta1,options.eta2, options.iteration, suffix)
+    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_%s_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta1,options.eta2,options.filename_sp, options.iteration, suffix)
     try:
         os.makedirs(out_dir)
     except Exception, e :
