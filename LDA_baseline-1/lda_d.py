@@ -19,7 +19,8 @@ out_dir = 'results'
 try:
     os.makedirs(out_dir)
 except:
-    print '%s dir exist' %(out_dir)
+    pass
+    #print '%s dir exist' %(out_dir)
 
 class LDA:
     def __init__(self, K, alpha, eta, docs,doc_ids, V, smartinit=True):
@@ -35,7 +36,7 @@ class LDA:
         self.n_z_t = numpy.zeros((K, V)) + self.eta   # Modify here to consider for Vector :: # word count of each topic and vocabulary
         self.n_z = numpy.zeros(K) + sum(self.eta)  ## Modify here to consider for Vector :: #   word count of each topic
 
-        print 'self.n_z : ' , self.n_z
+        #print 'self.n_z : ' , self.n_z
         self.N = 0
         for m, doc in enumerate(docs):
             self.N += len(doc)
@@ -105,21 +106,27 @@ class LDA:
 
 def lda_learning(lda, iteration, voca):
     pre_perp = lda.perplexity()
-    print ("initial perplexity=%f" % pre_perp)
+    flog = '%s/log_file.txt' %(out_dir)
+    f=open(flog,'a')
+    print "initial perplexity=%f" %(pre_perp),
     for i in range(iteration):
+        t_start = time.time()
         lda.inference()
         perp = lda.perplexity()
-        flog = '%s/log_file.txt' %(out_dir)
-        f=open(flog,'a')
-        f.write("-%d p=%f\n" % (i + 1, perp))
-        f.close()
-        print ("-%d p=%f" % (i + 1, perp))
-        if pre_perp:
+        t_end =time.time()
+        f.write("-%d p=%f\t time taken : %f\n" %(i + 1, perp,(t_end-t_start)))
+        #print "-%d p=%f \t Time taken : %f" %(i + 1, perp, (t_end-t_start) )
+        '''if pre_perp:
             if pre_perp < perp:
                 #output_word_topic_dist(lda, voca)
                 pre_perp = None
             else:
                 pre_perp = perp
+        '''
+        #print '\tTime taken for iteration %d : %f' %(i, (t_end - t_start)) 
+    f.close()
+    perp = lda.perplexity()
+    print ' | Final Perplexity : %f ' %(perp),
     output_word_topic_dist(lda, voca)
     output_doc_topic_dist(lda,voca)
 
@@ -178,7 +185,7 @@ def main():
     if not (options.filename or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
 
     if options.filename:
-         corpus,doc_ids, event_list  = vocabulary.load_file(options.filename)
+         corpus,doc_ids, event_list, total_no_word  = vocabulary.load_file(options.filename)
     else:
         corpus = vocabulary.load_corpus(options.corpus)
         if not corpus: parser.error("corpus range(-c) forms 'start:end'")
@@ -199,11 +206,13 @@ def main():
         print ' %s Dir exist ' %(out_dir)
         print 'E MSG : ' , e
     lda = LDA(options.K, options.alpha, options.eta, docs, doc_ids, voca.size(), options.smartinit)
+    t_int = time.time()
+    #print 'Intialization time : %f' %(t_int-t1) 
     flog = '%s/log_file.txt' %(out_dir)
     f=open(flog,'w')
-    f.write("corpus=%d, no of event = %d , words=%d, K=%d, a=%f, b=%f , iteration = %d \n" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta,options.iteration))
+    f.write("corpus(# of doc)=%d, no of event = %d , Uniq words=%d, Toal # of word =%d, K=%d, a=%f, b=%f , iteration = %d \n" % (len(corpus), len(event_list), len(voca.vocas), total_no_word, options.K, options.alpha, options.eta,options.iteration))
     f.close()
-    print ("corpus=%d, no of event =%d , uniq words=%d, K=%d, a=%f, b=%f" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta))
+    print ("corpus=%d, no of event =%d , uniq words=%d, K=%d, a=%f, b=%f" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta)),
 
     #import cProfile
     #cProfile.runctx('lda_learning(lda, options.iteration, voca)', globals(), locals(), 'lda.profile')

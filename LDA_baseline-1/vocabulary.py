@@ -29,6 +29,8 @@
 import pickle
 import nltk, re
 
+ip_dir ='ip'
+
 
 # Load from brown Corpus
 def load_corpus(range):
@@ -44,9 +46,12 @@ def load_file(filename):
     corpus = []
     doc_ids= []
     event_list=[]
-    f = open(filename, 'r')
+    fname_total  = '%s/%s' %(ip_dir,filename)
+    #print 'fname_total : ', fname_total
+    f = open(fname_total, 'r')
     story_dic = pickle.load(f)
     f.close()
+    total_no_word = 0
     for story in sorted(story_dic):
         temp_doc =[]
         for item in ['PER' , 'LOC' , 'ORG'] :
@@ -58,10 +63,11 @@ def load_file(filename):
         if len(temp_doc)>0:
             corpus.append(temp_doc)
             doc_ids.append(doc_id)
+            total_no_word += len(temp_doc)
             if event_id not in event_list:
                 event_list.append(event_id)
     f.close()
-    return corpus, doc_ids, event_list
+    return corpus, doc_ids, event_list,total_no_word
 
 #stopwords_list = nltk.corpus.stopwords.words('english')
 fname_stopword = 'stop_word.txt'
@@ -145,7 +151,7 @@ class Vocabulary:
 
     def size(self):
         return len(self.vocas)
-
+    
     def is_stopword_id(self, id):
         return self.vocas[id] in stopwords_list
 
