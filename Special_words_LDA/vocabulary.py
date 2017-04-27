@@ -48,7 +48,9 @@ f.close()
 
 # new load_file by Durgesh on 12/10/16 
 
-def load_file(filename):
+
+ # special words info in special_words_info 
+def load_file(filename,special_words):
     corpus = []
     doc_ids= []
     event_list=[]
@@ -60,15 +62,22 @@ def load_file(filename):
     for story in sorted(story_dic):
         #print story	 
         temp_doc =[]
-        #temp = []
-        for item in ['PER' , 'LOC' , 'ORG'] :
+        special_word =[]
+        non_special_word=[]
+        for item in ['PER' , 'LOC' , 'ORG', 'ONS'] :
             #print item , story_dic[story]['NER'][item]
-            temp_doc += story_dic[story]['NER'][item]
-        #temp_doc.append(temp )
+            for term in story_dic[story]['NER'][item]:
+                if term in special_words:
+                    special_word.append(term)
+                else:
+                    non_special_word.append(term)
+            #temp_doc += story_dic[story]['NER'][item]
+        temp_doc.append(special_word)
+        temp_doc.append(non_special_word)
         #temp =[]                       
         
-        for item in ['ONS']:
-            temp_doc += story_dic[story]['NER'][item]
+        #for item in ['ONS']:
+        #    temp_doc += story_dic[story]['NER'][item]
         #temp_doc.append(temp)
         #print 'Temp_doc :: ' , temp_doc
         #title_content = story_dic[story]['CONTENT'] + story_dic[story]['TITLE']
@@ -107,6 +116,125 @@ def lemmatize(w0):
     if w in recover_list: return recover_list[w]
     return w
 
+
+
+
+# Storing seprately special_words and non-special words
+
+class Vocabulary:
+    def __init__(self, excluds_stopwords=False,special_words={}):
+        self.vocas_sp = []        # id to word for NER
+        self.vocas_id_sp = dict() # word to id for NER
+        
+        self.vocas_nsp = []        # id to word for Non-NER
+        self.vocas_id_nsp = dict() # word to id for Non-NER
+        
+        self.docfreq_sp = []      # id to document frequency for NER
+        self.docfreq_nsp = []     # id  to document frequency for NON-NER
+        self.excluds_stopwords = excluds_stopwords
+        self.special_words= special_words
+        print 'Assam' in self.special_words
+
+    def term_to_id(self, term0, ner_tag='Nner'):
+        # ner_tag can be either ner or Nner
+        term =term0.strip() #lemmatize(term0)
+        #if not re.match(r'[a-z]+$', term): return None
+        #print '\nTerm is :%s#' %(term),
+        voca_id = None
+        if self.excluds_stopwords and is_stopword(term): return None
+        if term not in self.vocas_id_sp and term in self.special_words:
+            voca_id = len(self.vocas_sp)
+            #print '\t----------term is %s, id is : %d ' %(term,voca_id)
+            self.vocas_id_sp[term] = voca_id
+            self.vocas_sp.append(term)
+            self.docfreq_sp.append(0)
+        elif term not in self.vocas_id_nsp and term not in self.vocas_id_sp :
+                #print 'Executinh Here!!!' 
+                voca_id = len(self.vocas_nsp)
+                self.vocas_id_nsp[term] = voca_id
+                self.vocas_nsp.append(term)
+                self.docfreq_nsp.append(0)   
+        else:
+            if term in self.special_words:
+                #print 'TERM %s  Found in special words!!' %(term),
+                voca_id = self.vocas_id_sp[term]
+            else:
+                #print 'TERM %s NOT found in special words !!! ' %(term),
+                voca_id = self.vocas_id_nsp[term]
+        return voca_id
+
+    def doc_to_ids(self, doc):
+        #print ' '.join(doc)
+        new_doc = [] #list = []
+        words = dict()
+        #print 'Doc : ' , doc
+        sp_doc =[] 
+        nsp_doc =[]
+        print '\n ##########Processing new DOC-------------------------'
+        #print ' DOC is :', doc
+        for i,cat in enumerate(doc):
+            for term in doc[i]: # special non special ! Huh
+                #print 'term : %s' %(term),
+                wid = self.term_to_id(term)
+                #print '  wid =%d , category =%d' %(wid,i) ,
+                if wid != None:
+                    if i==0 :
+                        sp_doc.append(wid)
+                    else:
+                        nsp_doc.append(wid)
+                    if not wid in words:
+                        words[wid] = 1
+                        #print ' Exits : ' , wid in self.docfreq_sp ,  wid in self.docfreq_nsp
+                        if i==0 :
+                            self.docfreq_sp[wid] += 1
+                        else:
+                            self.docfreq_nsp[wid] += 1
+       
+        if "close" in dir(doc) : doc.close()
+        #print '\n Coded doc : ', [sp_doc,nsp_doc]
+        return [sp_doc,nsp_doc]
+
+    def cut_low_freq(self, corpus, threshold=1):
+        new_vocas = []
+        new_docfreq = []
+        self.vocas_id = dict()
+        conv_map = dict()
+        for id, term in enumerate(self.vocas):
+            freq = self.docfreq[id]
+            if freq > threshold:
+                new_id = len(new_vocas)
+                self.vocas_id[term] = new_id
+                new_vocas.append(term)
+                new_docfreq.append(freq)
+                conv_map[id] = new_id
+        self.vocas = new_vocas
+        self.docfreq = new_docfreq
+
+        def conv(doc):
+            new_doc = []
+            for id in doc:
+                if id in conv_map: new_doc.append(conv_map[id])
+            return new_doc
+        return [conv(doc) for doc in corpus]
+
+    def __getitem__(self, v,cat='sp'):
+    #returns the word corresponding to word no in the respective category  : Special Words and Non-Special Words ; cat takes two values : sp and nsp respectively 
+        if cat == 'sp':
+            return self.vocas_sp[v]
+        elif cat =='nsp':
+            return self.vocas_nsp[v]
+        else:
+            print 'Wrong Category provided : %s ' %(cat)
+        return None   
+    def size(self):
+        return [len(self.vocas_sp), len(self.vocas_nsp)]
+
+    def is_stopword_id(self, id):
+        return self.vocas[id] in stopwords_list
+
+
+'''
+# Document represntation of list of list : [ [t1,t2,t3,.....] , [t2,t3,t4,...], ...,      ] 
 class Vocabulary:
     def __init__(self, excluds_stopwords=False):
         self.vocas = []        # id to word 
@@ -186,103 +314,3 @@ class Vocabulary:
 
 
 ''' 
- STORINg SEPERATELY ner AND NON-ner TERMS
-
-class Vocabulary:
-    def __init__(self, excluds_stopwords=False):
-        self.vocas_ner = []        # id to word for NER
-        self.vocas_id_ner = dict() # word to id for NER
-        
-        self.vocas_Nner = []        # id to word for Non-NER
-        self.vocas_id_Nner = dict() # word to id for Non-NER
-        
-        self.docfreq_ner = []      # id to document frequency for NER
-        self.docfreq_Nner = []     # id  to document frequency for NON-NER
-        self.excluds_stopwords = excluds_stopwords
-
-    def term_to_id(self, term0, ner_tag='Nner'):
-        # ner_tag can be either ner or Nner
-        term =term0 #lemmatize(term0)
-        #if not re.match(r'[a-z]+$', term): return None
-        voca_id = None
-        if self.excluds_stopwords and is_stopword(term): return None
-        if term not in self.vocas_id_ner and   ner_tag=='ner':
-            voca_id = len(self.vocas_ner)
-            self.vocas_id_ner[term] = voca_id
-            self.vocas_ner.append(term)
-            self.docfreq_ner.append(0)
-        elif term not in self.vocas_id_Nner and  ner_tag =='Nner':
-                voca_id = len(self.vocas_Nner)
-                self.vocas_id_Nner[term] = voca_id
-                self.vocas_Nner.append(term)
-                self.docfreq_Nner.append(0)   
-        else:
-            if ner_tag== 'ner':
-                voca_id = self.vocas_id_ner[term]
-            elif ner_tag == 'Nner':
-                vocas_id = self.vocas_id_Nner[term]
-        return voca_id
-
-    def doc_to_ids(self, doc):
-        #print ' '.join(doc)
-        new_doc = [] #list = []
-        words = dict()
-        #print 'Doc : ' , doc
-        ner_doc =[] 
-        for term in doc[0]:
-            #print term
-            id = self.term_to_id(term, 'ner')
-            if id != None:
-                ner_doc.append(id)
-                if not id in words:
-                    words[id] = 1
-                    self.docfreq_ner[id] += 1
-        Nner_doc=[]
-        words= dict()
-        for term in doc[1]:
-            id = self.term_to_id(term, 'Nner')
-            if id != None:
-                Nner_doc.append(id)
-                if not id in words:
-                    words[id] = 1
-                    self.docfreq_Nner[id] += 1
-        if "close" in dir(doc) : doc.close()
-        return [ner_doc,Nner_doc]
-
-    def cut_low_freq(self, corpus, threshold=1):
-        new_vocas = []
-        new_docfreq = []
-        self.vocas_id = dict()
-        conv_map = dict()
-        for id, term in enumerate(self.vocas):
-            freq = self.docfreq[id]
-            if freq > threshold:
-                new_id = len(new_vocas)
-                self.vocas_id[term] = new_id
-                new_vocas.append(term)
-                new_docfreq.append(freq)
-                conv_map[id] = new_id
-        self.vocas = new_vocas
-        self.docfreq = new_docfreq
-
-        def conv(doc):
-            new_doc = []
-            for id in doc:
-                if id in conv_map: new_doc.append(conv_map[id])
-            return new_doc
-        return [conv(doc) for doc in corpus]
-
-    def __getitem__(self, v,term='ner'):
-    #returns the word corresponding to word no
-        if term == 'ner':
-            return self.vocas_ner[v]
-        else:
-            return self.vocas_Nner[v]
-   
-    def size(self):
-        return [len(self.vocas_ner), len(self.vocas_Nner)]
-
-    def is_stopword_id(self, id):
-        return self.vocas[id] in stopwords_list
-
-'''
