@@ -215,11 +215,11 @@ class LDA:
         # returns normalized P ( z| t) --- divided by row sum : numpy.newaxis extend the dimension 
         return self.n_z_t / self.n_z[:, numpy.newaxis]
     
-    def worddist_ner(self):
+    def worddist_sp(self):
         '''  get topic-word dist for ner  '''
         return self.n_z_t1 / self.n_z1[:,numpy.newaxis]
     
-    def worddist_Nner(self):
+    def worddist_nsp(self):
         '''  get topic-word dist for Non  ner  '''
         return self.n_z_t2 / self.n_z2[:,numpy.newaxis]    
        
@@ -231,8 +231,8 @@ class LDA:
         if docs == None: docs = self.docs
         #phi = self.worddist()
         
-        phi_ner = self.worddist_ner()
-        phi_Nner = self.worddist_Nner()
+        phi_sp = self.worddist_sp()
+        phi_nsp = self.worddist_nsp()
         log_per = 0
         N = 0
         Kalpha = self.K * self.alpha
@@ -240,9 +240,9 @@ class LDA:
             length_doc = len(self.docs[m][0]) + len(self.docs[m][1]) 
             theta = self.n_m_z[m] / ( length_doc + Kalpha)
             for w in doc[0]:
-                log_per -= numpy.log(numpy.inner(phi_ner[:,w], theta))
+                log_per -= numpy.log(numpy.inner(phi_sp[:,w], theta))
             for w in doc[1]:
-                log_per -= numpy.log(numpy.inner(phi_Nner[:,w], theta))
+                log_per -= numpy.log(numpy.inner(phi_nsp[:,w], theta))
             N += length_doc
         return numpy.exp(log_per / N)
     
@@ -308,8 +308,8 @@ def output_doc_topic_dist(lda,voc):
     #    print item
 def output_word_topic_dist(lda, voca):
     zcount = numpy.zeros(lda.K, dtype=int)
-    wordcount_ner = [dict() for k in range(lda.K)]
-    wordcount_Nner = [ dict() for k in range(lda.K)]
+    wordcount_sp = [dict() for k in range(lda.K)]
+    wordcount_nsp = [ dict() for k in range(lda.K)]
     #print 'Type wordcount' , type(wordcount) , wordcount[0],wordcount[1]
     for xlist, zlist in zip(lda.docs, lda.z_m_n):
         #xlist_new = xlist[0] + xlist[1]	
@@ -318,20 +318,20 @@ def output_word_topic_dist(lda, voca):
             #print 'x is ::   ' , x
             #print ' Z is ::: ' , z
             zcount[z] += 1
-            if x in wordcount_ner[z]:
-                wordcount_ner[z][x] += 1
+            if x in wordcount_sp[z]:
+                wordcount_sp[z][x] += 1
             else:
-                wordcount_ner[z][x] = 1
+                wordcount_nsp[z][x] = 1
         for x, z in zip(xlist[1], zlist[1]):
             #print 'x is ::   ' , x
             #print ' Z is ::: ' , z
             zcount[z] += 1
-            if x in wordcount_Nner[z]:
-                wordcount_Nner[z][x] += 1
+            if x in wordcount_nsp[z]:
+                wordcount_nsp[z][x] += 1
             else:
-                wordcount_Nner[z][x] = 1     
-    phi_ner = lda.worddist_ner()
-    phi_Nner = lda.worddist_Nner()
+                wordcount_nsp[z][x] = 1     
+    phi_sp = lda.worddist_sp()
+    phi_nsp = lda.worddist_nsp()
     fout = '%s/topic_word_dist.txt' %(out_dir) 
     f=open(fout,'w')
     for k in range(lda.K):
@@ -339,20 +339,22 @@ def output_word_topic_dist(lda, voca):
         f.write(" \n*************  NER terms \n")
         #print ("\n\n\n-- topic: %d (%d words)" % (k, zcount[k]))
         #print ( " \n*************  NER terms ")
-        for w in numpy.argsort(-phi_ner[k])[:30]:
+        for w in numpy.argsort(-phi_sp[k])[:30]:
+            #print w, voca.__getitem__(w,'sp')
             #print ("%s: %f (%d)" % (voca[w], phi_ner[k,w], wordcount_ner[k].get(w,0)))
-            f.write("%s: %f (%d)\n" % (voca[w], phi_ner[k,w], wordcount_ner[k].get(w,0)))
+            f.write("%s: %f (%d)\n" % (voca.__getitem__(w,'sp'), phi_sp[k,w], wordcount_sp[k].get(w,0)))
         #print (" \n+++++++++++++ Non Ner term ")
         f.write(" \n+++++++++++++ Non Ner term \n")
-        for w in numpy.argsort(-phi_Nner[k])[:30]:
+        for w in numpy.argsort(-phi_nsp[k])[:30]:
+            #print w, voca.__getitem__(w,'nsp')
             #print ("%s: %f (%d)" % (voca.__getitem__(w,'Nner'), phi_Nner[k,w], wordcount_Nner[k].get(w,0)))
-            f.write("%s: %f (%d)\n" % (voca.__getitem__(w,'Nner').encode('ascii', 'ignore'), phi_Nner[k,w], wordcount_Nner[k].get(w,0)))    
+            f.write("%s: %f (%d)\n" % (voca.__getitem__(w,'nsp').encode('ascii', 'ignore'), phi_nsp[k,w], wordcount_nsp[k].get(w,0)))    
     f.close()
 
 
-def initialize_eta1(V1, voca,eta1,fname):
+def initialize_eta1(V1, voca,fname):
     ''' Intitalize the dicichlet paprameter of special word from the file '''
-    eta1 =numpy.full(V1, eta1, dtype=float)  # parameter of words prior  for Named Entity (N.E)
+    eta1 =numpy.full(V1,0.001, dtype=float)  # parameter of words prior  for Named Entity (N.E)
     # Read file and initialize
     fname_total = '%s/%s' %('weightage_file',fname) 
     f=open(fname_total,'r')
@@ -360,7 +362,7 @@ def initialize_eta1(V1, voca,eta1,fname):
     for i,line in enumerate(line_list):
         #print ' line:' , line
         word, score = line.strip().split(' #,# ')
-        word_id = voca.vocas_id_ner[word]
+        word_id = voca.vocas_id_sp[word]
         eta1[word_id] = score
         '''
         a) read line by line 
@@ -368,6 +370,19 @@ def initialize_eta1(V1, voca,eta1,fname):
         c) intialize eta1 for corresponding word id 
         '''
     return eta1   
+
+def init_special_words(fname):
+    special_words= {}
+    fname_total = '%s/%s' %('weightage_file',fname) 
+    f=open(fname_total,'r')
+    line_list =f.read().strip().split('\n')
+    for i,line in enumerate(line_list):
+        #print ' line:' , line
+        word, score = line.strip().split(' #,# ')
+        special_words[word] = score 
+       
+    return special_words  
+
 
 def main():
     t1= time.time()
@@ -379,42 +394,49 @@ def main():
     parser.add_option("--fsp", dest="filename_sp", help="special words filename")
     parser.add_option("-c", dest="corpus", help="using range of Brown corpus' files(start:end)")
     parser.add_option("--alpha", dest="alpha", type="float", help="parameter alpha", default=0.5)
-    parser.add_option("--eta1", dest="eta1", type="float", help="parameter eta for ner word", default=0.4)
-    parser.add_option("--eta2", dest="eta2", type="float", help="parameter eta for Non-ner word", default=0.2)
+    #parser.add_option("--eta1", dest="eta1", type="float", help="parameter eta for ner word", default=0.4)
+    parser.add_option("--eta2", dest="eta2", type="float", help="parameter eta for Non-ner word", default=0.2) # No eta 2 here !!
     parser.add_option("-k", dest="K", type="int", help="number of topics", default=20)
     parser.add_option("-i", dest="iteration", type="int", help="iteration count", default=10)
     parser.add_option("-s", dest="smartinit", action="store_true", help="smart initialize of parameters", default=False)
     parser.add_option("--stopwords", dest="stopwords", help="exclude stop words", action="store_true", default=False)
     parser.add_option("--seed", dest="seed", type="int", help="random seed")
     parser.add_option("--df", dest="df", type="int", help="threshold of document freaquency to cut words", default=0)
+    parser.add_option("--dp", dest="dp", help="ditichlet prior sysmetric or asymmetric ?")
+    parser.add_option("--setup", dest="setup", help="setup details")
+    parser.add_option("--datasets", dest="did", help="setup details",default="dataset_1")
     (options, args) = parser.parse_args()
     #if not (options.filename_ip or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
-
-    if options.filename_ip:
-         corpus,doc_ids, event_list  = vocabulary.load_file(options.filename_ip)
+    
+    if options.filename_ip and options.filename_sp:
+         special_words = init_special_words(options.filename_sp)
+         corpus,doc_ids, event_list  = vocabulary.load_file(options.filename_ip,special_words) # Modify vocabulary file 
     else:
         options.filename_ip = 'filtered_event_new2.pkl'
-        corpus,doc_ids, event_list  = vocabulary.load_file(options.filename_ip)
+        options.filename_sp = ''
+        special_words = init_special_words(options.filename_sp) 
+        corpus,doc_ids, event_list  = vocabulary.load_file(options.filename_ip,special_words)
         #corpus = vocabulary.load_corpus(options.corpus)
         #if not corpus: parser.error("corpus range(-c) forms 'start:end'")
     if options.seed != None:
         numpy.random.seed(options.seed)
     
-    voca = vocabulary.Vocabulary(options.stopwords)
+    voca = vocabulary.Vocabulary(options.stopwords,special_words)
     docs = [voca.doc_to_ids(doc) for doc in corpus]
+
     
-    '''for  i in range(5):
-        print docs[i] 
-    
-    return'''
+ 
     if options.df > 0: docs = voca.cut_low_freq(docs, options.df)
     
     if event_list is not None : options.K  = len(event_list)
     suffix = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-    V1,V2 = voca.size()
-    eta1 = initialize_eta1(V1, voca,options.eta1,options.filename_sp)
+    V1,V2 = voca.size() # Total no of uniq word 
+    eta1 = initialize_eta1(V1, voca,options.filename_sp) # Modify intialize_eta1 method
+    
     #out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta1,options.eta2, options.iteration, suffix)
-    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta1_%f_eta2_%f_%s_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta1,options.eta2,options.filename_sp, options.iteration, suffix)
+    #out_dir = '%s/all_words/Topic_%d_alpha_%f_eta2_%f_%s_iter_%d/%s' %(out_dir,options.K,options.alpha,options.eta2,options.filename_sp, options.iteration, suffix) # Modify out_dir 
+    fname_sp = options.filename_sp.replace('/', '-')
+    out_dir = '%s/%s/%s/%s_Topic_%d_alpha_%f_eta2_%f_%s_iter_%d/%s' %(out_dir, options.dp, options.setup, options.did, options.K, options.alpha, options.eta2, fname_sp, options.iteration, suffix)
     try:
         os.makedirs(out_dir)
     except Exception, e :
@@ -422,7 +444,7 @@ def main():
         print 'E MSG : ' , e
     #lda = LDA(options.K, options.alpha, options.eta, docs, doc_ids, voca.size(), options.smartinit)
  
-    print 'V1 = %d , V2 = %d ' %(V1,V2)
+    print 'V1 = %d , V2 = %d ' %(V1,V2) # How to get V1 and V2 
     '''
     print ' Docs :: ' 
     
@@ -432,17 +454,18 @@ def main():
     print ' printing Doc Over  \n \n ' 
     '''
     
-    
-    lda = LDA(options.K, options.alpha,eta1,options.eta2,docs,doc_ids, V1,V2, smartinit=True) # hv to rechechk and modify options.smartint here
+
+    lda = LDA(options.K, options.alpha, eta1, options.eta2, docs, doc_ids, V1,V2, smartinit=True) # hv to rechechk and modify options.smartint here #Modify here and LDA class 
     flog = '%s/log_file.txt' %(out_dir)
     f=open(flog,'w')
-    f.write("corpus=%d, V1_ner = %d , V2_Nner =%d, K=%d, alpha=%f, eta1_ner=%f , eta_2_Nner = %f,  iteration = %d \n" % (len(corpus), V1, V2, options.K, options.alpha, options.eta1, options.eta2, options.iteration))
+    f.write("corpus=%d, V1_ner = %d , V2_Nner =%d, K=%d, alpha=%f , eta_2_Nner = %f,  iteration = %d \n" % (len(corpus), V1, V2, options.K, options.alpha, options.eta2, options.iteration))  # Modify here !
     f.close()
-    print "corpus=%d, V1_ner = %d , V2_Nner =%d, K=%d, alpha=%f, eta1_ner=%f , eta_2_Nner = %f,  iteration = %d \n" % (len(corpus), V1, V2, options.K, options.alpha, options.eta1, options.eta2, options.iteration)
+
+    print "corpus=%d, V1_ner = %d , V2_Nner =%d, K=%d, alpha=%f, eta_2_Nner = %f,  iteration = %d \n" % (len(corpus), V1, V2, options.K, options.alpha, options.eta2, options.iteration) #Modify here @
 
     #import cProfile
     #cProfile.runctx('lda_learning(lda, options.iteration, voca)', globals(), locals(), 'lda.profile')
-    lda_learning(lda, options.iteration, voca)
+    lda_learning(lda, options.iteration, voca) #check this function
     t2= time.time()
     print ' TOtal time taken : %f ' %(t2-t1)
     flog = '%s/log_file.txt' %(out_dir)

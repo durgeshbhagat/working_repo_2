@@ -6,7 +6,7 @@ import pickle
 import os
 import sys
 
-
+out_dir = 'weightage_file'
 
 def load_file(filename,per_weight,loc_weight,org_weight):
     corpus = []
@@ -38,44 +38,65 @@ def load_file(filename,per_weight,loc_weight,org_weight):
         cur_dic = entity_dic[i]
         for entity in cur_dic:
             st += '%s #,# %f\n' %(entity,weight_dic[tag] ) # curently editing here 
-    out_dir = 'weightage_file'
+    
     fout_name ='%s/per_%0.02f_loc_%0.2f_org_%0.2f' %(out_dir, per_weight,loc_weight,org_weight)
     fout= open(fout_name,'w')
     fout.write(st)
     fout.close() 
-    return corpus, doc_ids, event_list
+    return 
+
+
+def load_file_entity(filename,entity_tag,entity_weight):
+   
+    weight_dic = { 'PER' : per_weight , 'LOC' : loc_weight,'ORG' : org_weight }
+    fname_total  = 'ip/%s' %(filename)
+    f = open(fname_total, 'r')
+    story_dic = pickle.load(f)
+    f.close()
+   
+    st =''             
+    for i,tag in enumerate([entity]):
+        cur_dic = entity_dic[i]
+        for entity in cur_dic:
+            st += '%s #,# %f\n' %(entity,weight_dic[tag] ) # curently editing here 
+    for entity in story_dic[story]['NER'][entity_tag]:
+        st += '%s #,# %f\n' %(entity,entity_weight)
+    fout_name ='%s/per_%0.02f' %(out_dir, per_weight) #,loc_weight,org_weight)
+    fout= open(fout_name,'w')
+    fout.write(st)
+    fout.close() 
+    return 
+
 
 def main():
     import optparse
-    import vocabulary 
+    #import vocabulary 
     global out_dir 
     parser = optparse.OptionParser()
     parser.add_option("-f", dest="filename", help="corpus filename")
-    parser.add_option("--per", dest="per_weight", type="float", help="person weight", default=0.2)
-    parser.add_option("--loc", dest="loc_weight", type="float", help="location weight", default=0.4)
-    parser.add_option("--org", dest="org_weight", type="float", help="organisation weight", default=0.1)
+    #parser.add_option("--per", dest="per_weight", type="float", help="person weight", default=0.2)
+    #parser.add_option("--loc", dest="loc_weight", type="float", help="location weight", default=0.4)
+    #parser.add_option("--org", dest="org_weight", type="float", help="organisation weight", default=0.1)
+    parser.add_option("--dp", dest="dp", help="ditichlet prior sysmetric or asymmetric ?")
+    parser.add_option("--entity_weight", dest="setup", help="entity_weight")
+    parser.add_option("--setup", dest="setup", help="setup details")
     (options, args) = parser.parse_args()
-    '''
-    parser.add_option("-c", dest="corpus", help="using range of Brown corpus' files(start:end)")
-    parser.add_option("--alpha", dest="alpha", type="float", help="parameter alpha", default=0.5)
-    parser.add_option("--eta1", dest="eta1", type="float", help="parameter eta for ner word", default=0.4)
-    parser.add_option("--eta2", dest="eta2", type="float", help="parameter eta for Non-ner word", default=0.2)
-    parser.add_option("-k", dest="K", type="int", help="number of topics", default=20)
-    parser.add_option("-i", dest="iteration", type="int", help="iteration count", default=10)
-    parser.add_option("-s", dest="smartinit", action="store_true", help="smart initialize of parameters", default=False)
-    parser.add_option("--stopwords", dest="stopwords", help="exclude stop words", action="store_true", default=False)
-    parser.add_option("--seed", dest="seed", type="int", help="random seed")
-    parser.add_option("--df", dest="df", type="int", help="threshold of document freaquency to cut words", default=0)
-    (options, args) = parser.parse_args()
-    pass
+    
+    if options.dp == "uniform" and options.setup == "PER" :  
+        out_dir = '%s/%s/%s_%0.2f' %(out_dir, options.dp, options.setup, options.entity_weight)
+        try:
+            os.makedirs(out_dir)
+        except:
+            pass
+        load_file_entity(options.filename, options.setup, options.entity_weight)    
     '''
     if options.filename:
-         corpus,doc_ids, event_list  = vocabulary.load_file(options.filename)
+         corpus,doc_ids, event_list  = vocabulary.load_file(options.filename,t)
     else:
         options.filename = 'filtered_event_new2.pkl'
-        corpus,doc_ids, event_list  = vocabulary.load_file(options.filename)
-        
-    load_file(options.filename,options.per_weight,options.loc_weight,options.org_weight)   
+        corpus,doc_ids, event_list  = vocabulary.load_file(options.filename,t)
+    '''  
+    #load_file(options.filename,options.per_weight,options.loc_weight,options.org_weight)   
     #voca = vocabulary.Vocabulary(options.stopwords)
     #docs = [voca.doc_to_ids(doc) for doc in corpus]
     #corpus = vocabulary.load_corpus(options.corpus)

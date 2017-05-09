@@ -170,7 +170,7 @@ class Vocabulary:
         #print 'Doc : ' , doc
         sp_doc =[] 
         nsp_doc =[]
-        print '\n ##########Processing new DOC-------------------------'
+        #print '\n ##########Processing new DOC-------------------------'
         #print ' DOC is :', doc
         for i,cat in enumerate(doc):
             for term in doc[i]: # special non special ! Huh
@@ -217,7 +217,7 @@ class Vocabulary:
             return new_doc
         return [conv(doc) for doc in corpus]
 
-    def __getitem__(self, v,cat='sp'):
+    def __getitem__(self, v,cat):
     #returns the word corresponding to word no in the respective category  : Special Words and Non-Special Words ; cat takes two values : sp and nsp respectively 
         if cat == 'sp':
             return self.vocas_sp[v]
