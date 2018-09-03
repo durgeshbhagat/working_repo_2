@@ -12,6 +12,7 @@ import pickle
 import os
 import sys
 from datetime import datetime
+import time
 
 
 '''
@@ -38,9 +39,10 @@ fname = ['restoredDate_filtered_event_new.pkl', 'restoredDate_filtered_event_new
 start_index_dir = 0
 start_index_file = 2
 
-# stop_word_list = ['and' , 'for' , 'that', 'reuter', 'this', 'mln', 'not', 'last', 'will'] # for Reuter 
-stop_word_list = ['and', 'for', 'that', 'this', 'will', 'can', 'edu', 'not', 'you', 'don', 'article', 'writes', 'your'] # FOR 20-News Group
-
+stop_word_list = {  'Dataset-1': [],
+                    'Dataset-2': ['and' , 'for' , 'that', 'reuter', 'this', 'mln', 'not', 'last', 'will'] , # for Reuter
+                    'Dataset-3':['and', 'for', 'that', 'this', 'will', 'can', 'edu', 'not', 'you', 'don', 'article', 'writes', 'your'] # FOR 20-News Group
+                 }
 def read_pickle_file(index_dir, index_file):
     fname_total = '{:s}/{:s}'.format(base_dir[index_dir], fname[index_file])
     fin = open(fname_total, 'r')
@@ -102,7 +104,7 @@ def calculate_tf_ief(story_dic, dataset,topk, weight ):
             word_list =  story_dic[story]['content']
 
         for word in word_list:
-            if word in stop_word_list :
+            if word in stop_word_list[dataset] :
                 continue
             if word in event_to_term[event]['term']:
                 event_to_term[event]['term'][word]['count'] += 1
@@ -288,6 +290,7 @@ def calculate_tf_ief_old(story_dic):
     f.close()
 
 def main():
+    t_start = time.time()
     dataset_list = [ 'Dataset-1','Dataset-2', 'Dataset-3']
     score_list = [ 0.2, 0.2, 0.2]
     for i, dataset in enumerate(dataset_list):
@@ -295,6 +298,7 @@ def main():
             story_dic = read_pickle_file(index_dir = start_index_dir + i , index_file = start_index_file + i )
             calculate_tf_ief(story_dic, dataset= dataset, topk=40, weight= score * 0.1)
 
-
+    t_end = time.time()
+    print('Total time taken : %f' %(t_end-t_start))
 if __name__ == '__main__':
     main()
