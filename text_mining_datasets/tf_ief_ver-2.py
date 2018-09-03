@@ -137,7 +137,7 @@ def calculate_tf_ief(story_dic, dataset,topk, weight ):
     #out_dir = '20-Newgroup_datasets_analysis/tf-df-ief/top-%d' %(topk)
 
     out_dir = os.path.join( '..','Special_words_LDA', 'weightage_file', dataset, 'tf-df-icf', 'top-%d' %(topk) )
-    print out_dir
+    print(out_dir)
     try :
         os.makedirs(out_dir)
     except:
@@ -223,7 +223,7 @@ def calculate_tf_ief_old(story_dic):
         if event not in event_list:
             event_list.append(event)
         if event not in event_to_title:
-            print type(story_dic[story]['TIME_PUB'])
+            print(type(story_dic[story]['TIME_PUB']))
             event_to_title[event] =   ['{:s} \t {:s} \t {:s} \t {:s}'.format(story, story_dic[story]['TIME_PUB'], \
                                        story_dic[story]['TITLE'], story_dic[story]['LINK'].strip() )]
         else:
@@ -251,10 +251,10 @@ def calculate_tf_ief_old(story_dic):
         for word in event_to_term[event]['term']:
             tf_ief[event][word] = ( event_to_term[event]['term'][word] *1.0 / event_to_term[event]['+N'] ) # *  ( len(event_list) *1.0 / len(term_to_event[event]) )
     for event in event_to_term:
-        print event
+        print(event)
         temp_list = tf_ief[event].items()
         temp_list.sort(key = lambda item : item[-1], reverse = True)
-        print temp_list[:30]
+        print(temp_list[:30])
     
     event_wise_uniq_term = {}
     for term in term_to_event:
@@ -268,7 +268,7 @@ def calculate_tf_ief_old(story_dic):
             #print term, term_to_event[term]
     
     for event in sorted(event_wise_uniq_term):
-        print event, event_wise_uniq_term[event]
+        print(event, event_wise_uniq_term[event])
 
     out_dir = 'bomb_blast_event_analysis'
     try :
@@ -283,7 +283,7 @@ def calculate_tf_ief_old(story_dic):
         event_to_title[event].sort(key = lambda item: datetime.strptime(item.split('\t')[1].strip(), "%B %d, %Y") )
         st_event = '\n\t'.join(event_to_title[event])
         st += '\n{:s} \n\t{:s}\n\n\n'.format(event, st_event)
-        print event
+        print(event)
     f.write(st)
     f.close()
 
