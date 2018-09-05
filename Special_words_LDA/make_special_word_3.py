@@ -63,7 +63,7 @@ def filter_ner(dataset, weight, file_index):
 def main():
     t_start = time.time()
     for i,dataset in enumerate(dataset_list[0:3],0):
-        for score in range(1,2):
+        for score in range(1,6):
             filter_ner(dataset= dataset_list[i], weight = score * 0.1 ,file_index=i)
     t_end = time.time()
     print('\n \t\t ----- Total taken is : %f' %(t_end-t_start))
