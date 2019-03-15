@@ -1,0 +1,7 @@
+*.pdf
+*.zip
+*.txt
+*.pyc
+*.*~
+text_mining_datasets/*
+ip_dir_evaluation/*
