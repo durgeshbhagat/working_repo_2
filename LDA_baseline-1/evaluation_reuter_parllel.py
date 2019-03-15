@@ -110,13 +110,13 @@ def main():
     dataset_list  = ['Dataset-1', 'Dataset-2', 'Dataset-3']
     #setup_list = ['ner_keywords', 'tf-df-icf_top-40', 'IG_top-40']
     result_dir = 'results'
-    for dataset in dataset_list[2:3]:
+    for dataset in dataset_list[0:1]:
         t_start = time.time()
         cur_dir = os.path.join(result_dir, dataset)
         dir_list = os.listdir(cur_dir)
         #print( dir_list)
-        dir_list_new  = [x for x in dir_list if ( x.endswith('_100') or x.endswith('_120')) ]
-        #print(dir_list_new)
+        dir_list_new  = [x for x in dir_list if (x.split('_')[-1] in ['100', '120']) ]
+        print(dir_list_new)
         #continue
         #continue
         result_list = []
