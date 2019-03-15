@@ -1,5 +1,7 @@
 import os
 import sys
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import itertools
 
@@ -42,6 +44,7 @@ for i,cur_dir in enumerate(dir_total):
 
 x=range(1,121)
 print x
+fig =plt.figure()
 #fig, ax = plt.subplots()
 for i,p in enumerate(p_list):
     print ' i=%d , len p[i]=%d' %(i, len(p))
@@ -50,5 +53,6 @@ for i,p in enumerate(p_list):
 plt.legend(loc='best')
 plt.xlabel('------Iteration Count --->')
 plt.ylabel('---- Perplexity------>')
-plt.show()
+fname_out = 'perplexity.eps'
+fig.savefig(fname_out)
 print final_style

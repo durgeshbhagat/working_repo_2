@@ -108,7 +108,7 @@ def lda_learning(lda, iteration, voca):
     pre_perp = lda.perplexity()
     flog = '%s/log_file.txt' %(out_dir)
     f=open(flog,'a')
-    print "initial perplexity=%f" %(pre_perp),
+    print("initial perplexity=%f" %(pre_perp), end=' ,')
     for i in range(iteration):
         t_start = time.time()
         lda.inference()
@@ -123,12 +123,13 @@ def lda_learning(lda, iteration, voca):
             else:
                 pre_perp = perp
         '''
-        #print '\tTime taken for iteration %d : %f' %(i, (t_end - t_start)) 
+        print('\tTime taken for iteration %d : %f, perplexity : %f' %(i, (t_end - t_start), perp))
     f.close()
     perp = lda.perplexity()
-    print ' | Final Perplexity : %f ' %(perp),
+    print(' | Final Perplexity : %f ' %(perp), end=' ,')
     output_word_topic_dist(lda, voca)
     output_doc_topic_dist(lda,voca)
+    output_doc_topic_dist_all(lda,voca)
 
 def output_doc_topic_dist(lda,voc):
     doc_topic_dist =  lda.doc_topic_dist()
@@ -140,6 +141,24 @@ def output_doc_topic_dist(lda,voc):
         #print "%s : Topic_%d" %(lda.doc_ids[i], item+1)
         f.write( "%s : Topic_%d \n" %(lda.doc_ids[i], item+1))
     f.close()
+
+def output_doc_topic_dist_all(lda,voc):
+    """ Store the score of doc topic matrix """
+    doc_topic_dist =  lda.doc_topic_dist()
+    st = 'Doc_Id '
+    for i in range(lda.K):
+        st +=' , Topic_%03d' %(i)
+    st +='\n'
+    for i, doc_id in enumerate(lda.doc_ids):
+        st += '%s' %(doc_id)
+        for j,topic_id in enumerate(doc_topic_dist[i]):
+            st +=', %f' %(doc_topic_dist[i][j])
+        st +='\n'
+    fout = '%s/doc_topic_dist_score.csv' %(out_dir)
+    f=open(fout,'w') 
+    f.write(st)
+    f.close()
+    
     
 def output_word_topic_dist(lda, voca):
     zcount = numpy.zeros(lda.K, dtype=int)
@@ -160,7 +179,7 @@ def output_word_topic_dist(lda, voca):
     for k in range(lda.K):
         f.write("\n\n-- topic: %d (%d words)\n" % (k, zcount[k]))
         #print ("\n-- topic: %d (%d words)" % (k, zcount[k]))
-        for w in numpy.argsort(-phi[k])[:30]:
+        for w in numpy.argsort(-phi[k])[:50]:
             #print ("%s: %f (%d)" % (voca[w], phi[k,w], wordcount[k].get(w,0)))
             f.write("%s: %f (%d)\n" % (voca[w], phi[k,w], wordcount[k].get(w,0)))
     f.close()
@@ -181,11 +200,16 @@ def main():
     parser.add_option("--stopwords", dest="stopwords", help="exclude stop words", action="store_true", default=False)
     parser.add_option("--seed", dest="seed", type="int", help="random seed")
     parser.add_option("--df", dest="df", type="int", help="threshold of document freaquency to cut words", default=0)
+    #parser.add_option("--setup", dest="setup", help="setup details", default="uniform")
+    parser.add_option("--dataset", dest="did", help="setup details : Dataset-1/Dataset-2/Dataset-3",default="Dataset-1")
     (options, args) = parser.parse_args()
     if not (options.filename or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
 
     if options.filename:
-         corpus,doc_ids, event_list, total_no_word  = vocabulary.load_file(options.filename)
+        if options.did == 'Dataset-1':
+            corpus,doc_ids, event_list, total_no_word  = vocabulary.load_file(options.filename)
+        else:
+            corpus,doc_ids, event_list, total_no_word  = vocabulary.load_file_reuter(options.filename)
     else:
         corpus = vocabulary.load_corpus(options.corpus)
         if not corpus: parser.error("corpus range(-c) forms 'start:end'")
@@ -196,15 +220,20 @@ def main():
     docs = [voca.doc_to_ids(doc) for doc in corpus]
     if options.df > 0: docs = voca.cut_low_freq(docs, options.df)
     
-    if event_list is not None : options.K  = len(event_list)
+    if event_list is not None : options.K  = options.K #len(event_list)
     suffix = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-    out_dir = '%s/all_words/Topic_%d_alpha_%f_eta_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta, options.iteration, suffix)
+    #out_dir = '%s/all_words/Topic_%d_alpha_%f_eta_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta, options.iteration, suffix)
+    #out_dir = '%s/Dataset-1/Topic_%d_alpha_%f_eta_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta, options.iteration, suffix)
+    out_dir = '%s/%s/Topic_%d_alpha_%f_eta_%f_iter_%d/%s' %(out_dir, options.did, options.K, options.alpha, options.eta, options.iteration, suffix)
     
+    #out_dir = '%s/Reuters-21578/R-8-train-train_no-stop/Topic_%d_alpha_%f_eta_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta, options.iteration, suffix)
+    #out_dir = '%s/20-Newsgroup/20-Newsgroup_train-train_all_term/Topic_%d_alpha_%f_eta_%f_iter_%d/%s' %(out_dir,options.K,options.alpha, options.eta, options.iteration, suffix)
+    print('out_dir: ', out_dir)
     try:
         os.makedirs(out_dir)
-    except Exception, e :
-        print ' %s Dir exist ' %(out_dir)
-        print 'E MSG : ' , e
+    except Exception as e:
+        print(' %s Dir exist ' %(out_dir))
+        print('E MSG : ' , e)
     lda = LDA(options.K, options.alpha, options.eta, docs, doc_ids, voca.size(), options.smartinit)
     t_int = time.time()
     #print 'Intialization time : %f' %(t_int-t1) 
@@ -212,13 +241,13 @@ def main():
     f=open(flog,'w')
     f.write("corpus(# of doc)=%d, no of event = %d , Uniq words=%d, Toal # of word =%d, K=%d, a=%f, b=%f , iteration = %d \n" % (len(corpus), len(event_list), len(voca.vocas), total_no_word, options.K, options.alpha, options.eta,options.iteration))
     f.close()
-    print ("corpus=%d, no of event =%d , uniq words=%d, K=%d, a=%f, b=%f" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta)),
+    print("corpus=%d, no of event =%d , uniq words=%d, K=%d, a=%f, b=%f" % (len(corpus), len(event_list), len(voca.vocas), options.K, options.alpha, options.eta)),
 
     #import cProfile
     #cProfile.runctx('lda_learning(lda, options.iteration, voca)', globals(), locals(), 'lda.profile')
     lda_learning(lda, options.iteration, voca)
     t2= time.time()
-    print ' TOtal time taken : %f ' %(t2-t1)
+    print(' Total time taken : %f ' %(t2-t1))
     flog = '%s/log_file.txt' %(out_dir)
     f=open(flog,'a')
     f.write(' TOtal time taken : %f ' %(t2-t1))
