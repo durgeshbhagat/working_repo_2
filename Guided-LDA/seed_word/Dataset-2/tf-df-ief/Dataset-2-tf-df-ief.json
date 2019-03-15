@@ -1,0 +1,87 @@
+{
+    "earn": [
+        "revs", 
+        "div", 
+        "avg", 
+        "oper", 
+        "qtly", 
+        "mths", 
+        "excludes", 
+        "payout", 
+        "writedown"
+    ], 
+    "money-fx": [
+        "miyazawa", 
+        "governors", 
+        "kiichi"
+    ], 
+    "trade": [
+        "uruguay"
+    ], 
+    "acq": [
+        "cyclops", 
+        "twa", 
+        "purolator", 
+        "tendered"
+    ], 
+    "grain": [
+        "crop", 
+        "crops", 
+        "gao", 
+        "certs", 
+        "elevator", 
+        "winterkill", 
+        "cbt", 
+        "farmland", 
+        "arable", 
+        "soybeans", 
+        "bushels", 
+        "ukraine", 
+        "daniels", 
+        "grasses", 
+        "legumes", 
+        "alfalfa", 
+        "growmark", 
+        "cooperatives", 
+        "carloadings", 
+        "reseeded", 
+        "het", 
+        "comite", 
+        "rains", 
+        "planted", 
+        "mulligan"
+    ], 
+    "crude": [
+        "bbl", 
+        "postings", 
+        "refineries", 
+        "saudis", 
+        "api", 
+        "herrington", 
+        "texaco", 
+        "wti", 
+        "pumping", 
+        "nazer", 
+        "hernandez", 
+        "subroto", 
+        "alvite", 
+        "sour", 
+        "petroleos", 
+        "jungle"
+    ], 
+    "ship": [
+        "vessel", 
+        "janeiro", 
+        "shipowners", 
+        "dwt", 
+        "fnv", 
+        "hormuz", 
+        "marines", 
+        "shipbuilders", 
+        "strikers", 
+        "silkworm", 
+        "waterway", 
+        "capsized", 
+        "barge"
+    ]
+}
