@@ -12,11 +12,11 @@ l_per = []
 
 #eta_2 = 0.1  # float(sys.argv[1]) # Non special word ; eta_1 : special word
 
-eta_2_start = 1
-eta_2_end = 5
+eta_2_start = 2
+eta_2_end = 3
 
-eta_1_start = 2  # int(sys.argv[2])
-eta_1_end = 3  # int(sys.argv[3])
+eta_1_start = 1  # int(sys.argv[2])
+eta_1_end = 2  # int(sys.argv[3])
 
 setup_list = ['ner_keywords', 'tf-df-icf', 'IG']
 
@@ -29,7 +29,7 @@ for cur_eta_1 in range(eta_1_start, eta_1_end):
     for cur_eta_2 in range(eta_2_start, eta_2_end):
         eta_1 = cur_eta_1* 0.1
         eta_2 = cur_eta_2 * 0.1
-        for index, cur_setup in enumerate(setup_list[0:1], 0):
+        for index, cur_setup in enumerate(setup_list[2:3], 2):
             if index == 0:
                 fsp_file = '%s/ner_keywords/%s-ner_keyword_%0.1f' % (did, did, eta_1)
                 setup = 'ner_keywords'
