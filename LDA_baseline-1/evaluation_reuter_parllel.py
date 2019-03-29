@@ -15,7 +15,7 @@ import pandas as pd
 #from memory_profiler import profile
 
 
-def evaluation_matrix(fname, parameter, dataset='Dataset-1'):
+def evaluation_matrix(fname,  dataset='Dataset-1'):
     t1= time.time()
     f=open(fname,'r')
     line_list=f.readlines()
@@ -112,36 +112,36 @@ def main():
     result_dir = 'results'
     for dataset in dataset_list[0:1]:
         t_start = time.time()
-        cur_dir = os.path.join(result_dir, dataset)
-        dir_list = os.listdir(cur_dir)
+        ip_dir = os.path.join(result_dir, dataset)
+        dir_list = os.listdir(ip_dir)
         #print( dir_list)
         dir_list_new  = [x for x in dir_list if (x.split('_')[-1] in ['100', '120']) ]
         print(dir_list_new)
         #continue
         #continue
         result_list = []
-        for dir in dir_list_new[:]:
+        for cur_dir in dir_list_new[:]:
             #if dir.endswith('_100') or dir.endswith('_120'):
-            total_dir = os.listdir( os.path.join(cur_dir, dir))
+            total_dir = os.listdir( os.path.join(ip_dir, cur_dir))
             # alpha, eta_1, eta_2 ,
             total_dir.sort()
             #print('line 130:', total_dir)
-            parameter_list = dir.split('_')
+            parameter_list = cur_dir.split('_')
             print(parameter_list)
             alpha =  float(parameter_list[3])
             eta_1 = float(parameter_list[5])
             iteration_count = int(parameter_list[-1])
             topic = int(parameter_list[1])
             for time_dir in total_dir:
-                fname_total = os.path.join(cur_dir, dir, time_dir, 'doc_topic_dist.txt')
+                fname_total = os.path.join(ip_dir, cur_dir, time_dir, 'doc_topic_dist.txt')
                 print(dataset, fname_total)
 
                 if not os.path.isfile(fname_total):
                     continue
-                result = evaluation_matrix(fname = fname_total, parameter = [], dataset=dataset)
+                result = evaluation_matrix(fname = fname_total, dataset=dataset)
                 print(result)
 
-                result['fname'] = os.path.join(cur_dir, dir, time_dir)
+                result['fname'] = os.path.join(ip_dir, cur_dir, time_dir)
                 result['time'] = time_dir
 
                 result['alpha'] = alpha
@@ -149,7 +149,7 @@ def main():
                 result['iteration_count'] = iteration_count
                 result['topic'] = topic
 
-                result_json_fname = os.path.join(cur_dir, dir, total_dir[-1], 'evaluation_result.josn')
+                result_json_fname = os.path.join(ip_dir, cur_dir, total_dir[-1], 'evaluation_result.josn')
                 fout = open(result_json_fname, 'w')
                 json.dump(result, fout, indent = 4)
                 fout.close()
