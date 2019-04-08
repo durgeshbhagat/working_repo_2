@@ -99,9 +99,9 @@ def main():
     cluster_count = [53, 8, 20]
     result_dir = 'results'
 
-    for i, dataset in enumerate(dataset_list[1:2], 1):
+    for i, dataset in enumerate(dataset_list[0:1], 0):
         t_start = time.time()
-        for setup in setup_list[0:2]:
+        for setup in setup_list[2:3]:
 
             cur_dir = os.path.join(result_dir, dataset, setup)
             dir_list = os.listdir(cur_dir)
@@ -150,6 +150,7 @@ def main():
                         result['threshold'] = threshold
                         print(result)
                         result_list.append(result)
+                        print('clusterMethod=K-means, dataset=%s, setup =%s, eta_1=%0.2f, eta_2=%0.2f, threshold=%0.3f ' %(dataset, setup, eta_1, eta_2, threshold))
             out_dir = os.path.join(result_dir, 'result_analysis_comparision' , 'xlsx')
             try:
                 os.makedirs(out_dir)

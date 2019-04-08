@@ -99,7 +99,7 @@ def main():
     cluster_count = [53, 8, 20]
     result_dir = 'results'
 
-    for i, dataset in enumerate(dataset_list[2:3], 2):
+    for i, dataset in enumerate(dataset_list[0:1], 0):
         t_start = time.time()
         for setup in setup_list[0:1]:
 
@@ -150,6 +150,7 @@ def main():
                         result['threshold'] = threshold
                         print(result)
                         result_list.append(result)
+                        print('clusterMethod=Spectral, dataset =%s, setup =%s, eta_1= %0.2f, eta_2=%0.2f, threshold=%0.3f ,' %(dataset, setup, eta_1, eta_2, threshold))
             out_dir = os.path.join(result_dir, 'result_analysis_comparision' , 'xlsx')
             try:
                 os.makedirs(out_dir)
@@ -159,7 +160,7 @@ def main():
             df = pd.DataFrame(result_list, columns=['fname', 'time', 'topic', 'alpha', 'eta_1', 'eta_2', 'threshold', 'tp', 'tn', 'fn', 'fp', 'precision', 'recall',
                                                     'f_measure' , 'rand_index', 'jc','accuracy', 'iteration_count'])
             df.sort_values(['topic', 'alpha','eta_1', 'eta_2' , 'threshold'], inplace=True)
-            fout_name_total = os.path.join(out_dir , 'KMeans-PKSS-LDA-' + dataset + '_' + setup + '.xlsx')
+            fout_name_total = os.path.join(out_dir , 'Spectral-PKSS-LDA-' + dataset + '_' + setup + '.xlsx')
             df.to_excel( fout_name_total,  sheet_name=dataset, index=False, startrow=0, startcol=0)
                         #print(kmeanOp_dic)
 
