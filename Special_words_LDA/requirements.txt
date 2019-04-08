@@ -1,0 +1,5 @@
+numpy
+nltk
+pandas
+sklearn
+openpyxl
