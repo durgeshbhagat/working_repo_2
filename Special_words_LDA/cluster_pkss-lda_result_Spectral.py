@@ -107,6 +107,8 @@ def main():
             dir_list = os.listdir(cur_dir)
             #print( dir_list)
             dir_list_new  = [x for x in dir_list if ( x.endswith('_100') or x.endswith('_120')) ]
+            dir_list_new.sort()
+            print(dir_list_new)
             result_list = []
             for dir in dir_list_new[:]:
                 #if dir.endswith('_100') or dir.endswith('_120'):
