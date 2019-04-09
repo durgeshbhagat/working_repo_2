@@ -112,11 +112,11 @@ def main():
     # Form file list
     #base_dir = sys.argv[1]
     dataset_list  = ['Dataset-1', 'Dataset-2', 'Dataset-3']
-    setup_list = ['ner_keywords', 'tf-df-icf_top-40', 'IG_top-40']
+    setup_list = ['ner_keywords', 'tf-df-ief', 'IG']
     result_dir = os.path.join( '..', 'results')
-    for dataset in dataset_list[0:1]:
+    for dataset in dataset_list[1:2]:
         t_start = time.time()
-        for setup in setup_list[0:1]:
+        for setup in setup_list[0:2]:
             cur_dir = os.path.join(result_dir, dataset, setup)
             dir_list = os.listdir(cur_dir)
             print( dir_list)
