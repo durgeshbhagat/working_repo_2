@@ -14,11 +14,19 @@ from scipy.sparse import csr_matrix
 import time
 import os
 from datetime import datetime
-import guidedlda
+import pandas as pd
+
 import json
 
 out_dir = '../results'
 SEED_DIR = '../seed_word'
+
+
+
+
+import guidedlda
+
+
 
 try:
     os.makedirs(out_dir)
@@ -104,19 +112,8 @@ def main():
 
 
     for i,doc in enumerate(docs):
-        #print(doc[:40])
         for j, words in enumerate(doc):
-            #if words ==12:
-            #    print('Before :: ', i, X[i][12])
             X[i][words] += 1
-            #if words ==12:
-            #    print('After :: ',i, X[i][12])
-            #if (X[i][words] < 0):
-            #    print(i, words, X[i][words])
-            #pass
-    #print(X[:2,:35])
-    # checking for negative values in X :
-
 
     for i in range(len(docs)):
         for j in range(len(voca.vocas)):
@@ -134,7 +131,11 @@ def main():
     seed_topics_fname = '{}-{}.json'.format(options.did, options.setup)
     seed_topics_fname_total = os.path.join(seed_topics_dir, seed_topics_fname)
     seed_topics = load_seed_word(seed_topics_fname_total, voca.vocas_id, event_list)
+
+    # saving to call graph
+
     model = guidedlda.GuidedLDA(n_topics= options.K, n_iter= options.iteration + 1 , alpha = options.alpha, eta = options.eta2, random_state= options.K, refresh=20)
+    #model = guidedlda.GuidedLDA(n_topics= options.K, n_iter= options.iteration + 1 , alpha = options.alpha, eta = options.eta2, random_state= options.K, refresh=20)
     model.fit(X, seed_topics=seed_topics, seed_confidence=options.eta1) #
     #model.fit(X)
 
@@ -148,6 +149,17 @@ def main():
         st_doc_topic += "{} : Topic_{}\n".format(doc_ids[i], doc_topic[i].argmax())
     fdoc.write(st_doc_topic)
     fdoc.close()
+
+    # Writing to file doc_topic_dist_score.csv
+    topic_list = []
+    for i in range(options.K):
+        topic_list.append('Topic_%03d'%(i))
+    print(doc_topic.shape, len(topic_list), len(doc_ids))
+    df = pd.DataFrame(data=doc_topic, columns=topic_list, index=doc_ids)
+    #print(df.head)
+    fout_doc_topic_score = os.path.join(out_dir, 'doc_topic_dist_score.csv')
+    df.to_csv(fout_doc_topic_score)
+
 
     # Writing to file topic-word
     n_top_words = 20
