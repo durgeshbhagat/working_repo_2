@@ -53,7 +53,7 @@ f.close()
 
 # new load_file by Durgesh on 12/10/16 
 
-
+# for restoredDate_filtered_event_new_v.2_0_900.pkl
 # special words info in special_words_info
 def load_file(filename, special_words):
     corpus = []
