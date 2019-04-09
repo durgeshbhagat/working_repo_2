@@ -16,4 +16,4 @@ Before running this program, please install the packages mentioned in requiremen
 pip install -r requirements.txt
 
 ## How to run 
-cheack the readme.txt of individual model code
+check the readme.txt of individual model code
