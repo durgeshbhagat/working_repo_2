@@ -48,7 +48,7 @@ def load_file(filename):
     event_list=[]
     fname_total  = '%s/%s' %(ip_dir,filename)
     #print 'fname_total : ', fname_total
-    f = open(fname_total, 'r')
+    f = open(fname_total, 'rb')
     story_dic = pickle.load(f)
     f.close()
     total_no_word = 0
@@ -74,7 +74,7 @@ def load_file_reuter(filename):
     event_list=[]
     fname_total  = '%s/%s' %(ip_dir,filename)
     #print 'fname_total : ', fname_total
-    f = open(fname_total, 'r')
+    f = open(fname_total, 'rb')
     story_dic = pickle.load(f)
     f.close()
     total_no_word = 0
