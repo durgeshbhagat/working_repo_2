@@ -98,6 +98,7 @@ def evaluation_matrix(fname,  dataset='Dataset-1'):
     d['f_measure'] = round(f_measure, 4)
     d['accuracy'] = round(((tp+ tn) * 1.0) / (tp+ tn + fp + fn), 4)
 
+    del doc_pair_list
 
     return d # , model_op
 
